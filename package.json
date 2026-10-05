@@ -14,7 +14,9 @@
     "lint:check": "expo lint",
     "start": "expo start",
     "web": "expo start --web",
-    "verify:scanner": "tsc -p scripts/tsconfig.verify.json && node .local/build/verify/scripts/verify-scanner.js"
+    "verify:scanner": "tsc -p scripts/tsconfig.verify.json && node .local/build/verify/scripts/verify-scanner.js",
+    "fixture:create": "tsc -p scripts/tsconfig.verify.json && node .local/build/verify/scripts/create-demo-fixture.js",
+    "fixture:verify": "tsc -p scripts/tsconfig.verify.json && node .local/build/verify/scripts/verify-demo-fixture.js"
   },
   "displayName": "GuardRail",
   "description": "Android-first Solana wallet security companion: scan, explain, and revoke SPL Token delegates on Devnet.",
@@ -37,6 +39,7 @@
     "@react-navigation/native": "^7.1.8",
     "@rn-primitives/dropdown-menu": "^1.2.0",
     "@solana-program/memo": "^0.11.0",
+    "@solana-program/system": "^0.12.2",
     "@solana-program/token": "^0.14.0",
     "@solana/kit": "^6.1.0",
     "@tanstack/react-query": "^5.90.7",
