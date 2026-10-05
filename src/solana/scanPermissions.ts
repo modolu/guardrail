@@ -159,7 +159,7 @@ export async function scanPermissions(rpc: PermissionScanRpc, walletOwner: Addre
           { commitment: COMMITMENT, encoding: 'base64' },
         )
         .send(),
-    'Could not load token accounts from the Devnet RPC.',
+    'Could not load token accounts from the Devnet RPC. It may be busy or rate limiting requests; wait a moment and try again.',
   )
   const contextSlot = tokenAccounts.context.slot
 

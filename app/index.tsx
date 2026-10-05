@@ -60,7 +60,7 @@ function DisconnectedView({ connect }: { connect: () => Promise<unknown> }) {
       <View style={styles.brand}>
         <Text style={styles.brandName}>GuardRail</Text>
         <Text style={styles.brandDescription}>
-          Review which addresses can move tokens from your Solana wallet, and revoke those permissions.
+          Review which addresses are approved as delegates on your SPL Token accounts, and revoke them if you wish.
         </Text>
       </View>
       <Pressable
@@ -142,7 +142,7 @@ function ScanResults({ result }: { result: PermissionScanResult }) {
       <View style={styles.results}>
         <EmptyState
           title="No supported active delegates"
-          message="None of this wallet's standard SPL Token accounts on Devnet currently have an active delegate. Other authority types are not checked."
+          message="In the latest scan, none of this wallet's standard SPL Token accounts on Devnet had an active delegate. Other authority types, other token programs and other networks are not checked."
         />
         {skippedNote ? <Text style={styles.note}>{skippedNote}</Text> : null}
       </View>

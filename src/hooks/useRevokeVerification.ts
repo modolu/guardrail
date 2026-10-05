@@ -17,7 +17,7 @@ export function useRevokeVerification(attempt: RevokeAttempt | undefined): {
   retry: () => void
 } {
   const queryClient = useQueryClient()
-  const { data, isFetching, refetch } = useQuery<RevokeOutcome>({
+  const { data, error, isFetching, refetch } = useQuery<RevokeOutcome>({
     queryKey: ['revoke-verification', 'solana:devnet', attempt?.finding.owner ?? '', attempt?.signature ?? ''],
     queryFn: attempt
       ? async () => {
@@ -37,7 +37,31 @@ export function useRevokeVerification(attempt: RevokeAttempt | undefined): {
     void refetch()
   }, [refetch])
 
-  return { state: isFetching || !data ? { status: 'verifying' } : { status: 'done', outcome: data }, retry }
+  return { state: toVerificationState({ isFetching, error, data }), retry }
+}
+
+function toVerificationState(query: {
+  isFetching: boolean
+  error: unknown
+  data: RevokeOutcome | undefined
+}): RevokeVerificationState {
+  if (query.isFetching) {
+    return { status: 'verifying' }
+  }
+  if (query.error) {
+    // confirmAndVerifyRevoke never throws; this is a safety net so an unexpected failure shows a retry, not a spinner.
+    return {
+      status: 'done',
+      outcome: {
+        status: 'not-verified',
+        error: {
+          code: 'VERIFICATION_FAILED',
+          message: 'Verification did not complete. Retry verification; it only reads Devnet.',
+        },
+      },
+    }
+  }
+  return query.data ? { status: 'done', outcome: query.data } : { status: 'verifying' }
 }
 
 // The delegate is verified gone on-chain, so the cached scan should stop listing it. Removing exactly this finding

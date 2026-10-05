@@ -123,7 +123,7 @@ function RevokeReview({ finding }: { finding: PermissionFinding }) {
         <Pressable
           accessibilityRole="button"
           disabled={waiting}
-          onPress={() => router.back()}
+          onPress={() => (router.canGoBack() ? router.back() : router.dismissTo('/'))}
           style={({ pressed }) => [sharedStyles.secondaryButton, pressed && sharedStyles.pressed]}
         >
           <Text style={sharedStyles.secondaryButtonText}>Cancel</Text>
