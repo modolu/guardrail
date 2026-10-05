@@ -16,6 +16,11 @@ import {
   type PermissionScanRpc,
   type RawAccount,
 } from '../src/solana/scanPermissions'
+import {
+  delegatedAmountSummary,
+  PERMISSION_EXPLANATIONS,
+  REVOKE_UNAVAILABLE_REASONS,
+} from '../src/constants/explanations'
 import { GuardRailError } from '../src/types/errors'
 import { formatRawAmount, parseRawAmount } from '../src/utils/amounts'
 
@@ -208,6 +213,50 @@ test('explanation codes and revocability', () => {
   assert.equal(unknownMint.revocable, false)
   assert.equal(unknownMint.decimals, null)
   assert.equal(unknownMint.delegatedAmountDisplay, '250500000 base units')
+})
+
+test('frozen accounts are view-only: on-chain Revoke fails with AccountFrozen', () => {
+  // Mirrors `process_revoke` in solana-program/token (and p-token): the frozen check runs before the owner check,
+  // so even the owner's signature cannot revoke a frozen account. Zero-amount delegates stay revocable.
+  for (const delegatedAmount of [0n, 1n, U64_MAX]) {
+    const finding = buildFinding(candidate({ state: 2, delegatedAmount }), 6)
+    assert.equal(finding.explanationCode, 'SPL_TOKEN_DELEGATE_ACCOUNT_FROZEN')
+    assert.equal(finding.revocable, false)
+  }
+})
+
+test('revoke-unavailable reasons agree with finding revocability for every code', () => {
+  const findings = [
+    buildFinding(candidate(), 6),
+    buildFinding(candidate({ delegatedAmount: 0n }), 6),
+    buildFinding(candidate({ state: 2 }), 6),
+    buildFinding(candidate(), null),
+  ]
+  assert.deepEqual(
+    new Set(findings.map((f) => f.explanationCode)),
+    new Set(Object.keys(PERMISSION_EXPLANATIONS)),
+    'every explanation code is exercised',
+  )
+  for (const finding of findings) {
+    const reason = REVOKE_UNAVAILABLE_REASONS[finding.explanationCode]
+    assert.equal(reason === null, finding.revocable, finding.explanationCode)
+  }
+})
+
+test('explanations use factual language only', () => {
+  const copy = [...Object.values(PERMISSION_EXPLANATIONS), ...Object.values(REVOKE_UNAVAILABLE_REASONS)].join(' ')
+  for (const word of ['malicious', 'dangerous', 'scam', 'compromised', 'safe', 'risk']) {
+    assert.ok(!new RegExp(`\\b${word}`, 'i').test(copy), word)
+  }
+})
+
+test('delegated amount summary is plain language', () => {
+  assert.equal(delegatedAmountSummary(buildFinding(candidate(), 6)), 'Can move up to 250.5 tokens')
+  assert.equal(
+    delegatedAmountSummary(buildFinding(candidate({ delegatedAmount: 0n }), 6)),
+    'Delegated amount is 0; cannot currently move tokens',
+  )
+  assert.equal(delegatedAmountSummary(buildFinding(candidate(), null)), 'Can move up to 250500000 base units')
 })
 
 // ---- scanPermissions with a fake RPC ----

@@ -1,30 +1,35 @@
 import type { ReactNode } from 'react'
-import { StyleSheet, Text, View } from 'react-native'
+import { Pressable, StyleSheet, Text, View } from 'react-native'
+import { useRouter } from 'expo-router'
 import { AddressChip } from '@/src/components/AddressChip'
-import { PERMISSION_EXPLANATIONS } from '@/src/constants/explanations'
-import { colors, radius, spacing } from '@/src/constants/theme'
+import { delegatedAmountSummary } from '@/src/constants/explanations'
+import { colors, radius, sharedStyles, spacing } from '@/src/constants/theme'
 import type { PermissionFinding } from '@/src/types/permission'
 
-// Basic finding card; Task 6 polishes layout and adds navigation to detail/revoke.
 export function PermissionCard({ finding }: { finding: PermissionFinding }) {
+  const router = useRouter()
+
   return (
     <View style={styles.card}>
       <View style={styles.header}>
-        <Text style={styles.title}>Token delegate</Text>
-        <Text style={[styles.status, !finding.revocable && styles.statusViewOnly]}>
-          {finding.revocable ? 'Revocable' : 'View only'}
-        </Text>
+        <Text style={styles.eyebrow}>ACTIVE DELEGATE</Text>
+        {finding.revocable ? null : <Text style={styles.viewOnly}>View only</Text>}
       </View>
+      <Text style={styles.summary}>{delegatedAmountSummary(finding)}</Text>
       <Row label="Delegate">
         <AddressChip address={finding.delegate} />
       </Row>
-      <Row label="Mint">
+      <Row label="Token mint">
         <AddressChip address={finding.mint} />
       </Row>
-      <Row label="Delegated amount">
-        <Text style={styles.amount}>{finding.delegatedAmountDisplay}</Text>
-      </Row>
-      <Text style={styles.explanation}>{PERMISSION_EXPLANATIONS[finding.explanationCode]}</Text>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`Review delegate permission for token account ${finding.tokenAccount}`}
+        onPress={() => router.push({ pathname: '/permission/[id]', params: { id: finding.id } })}
+        style={({ pressed }) => [sharedStyles.secondaryButton, styles.review, pressed && sharedStyles.pressed]}
+      >
+        <Text style={sharedStyles.secondaryButtonText}>Review</Text>
+      </Pressable>
     </View>
   )
 }
@@ -52,18 +57,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
-  title: {
-    color: colors.text,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  status: {
+  eyebrow: {
     color: colors.accent,
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 1,
+  },
+  viewOnly: {
+    color: colors.textMuted,
     fontSize: 12,
     fontWeight: '600',
   },
-  statusViewOnly: {
-    color: colors.textMuted,
+  summary: {
+    color: colors.text,
+    fontSize: 17,
+    fontWeight: '600',
+    lineHeight: 23,
   },
   row: {
     alignItems: 'center',
@@ -75,17 +84,7 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     fontSize: 13,
   },
-  amount: {
-    color: colors.text,
-    fontFamily: 'monospace',
-    fontSize: 14,
-    flexShrink: 1,
-    textAlign: 'right',
-  },
-  explanation: {
-    color: colors.textMuted,
-    fontSize: 13,
-    lineHeight: 19,
+  review: {
     marginTop: spacing.xs,
   },
 })

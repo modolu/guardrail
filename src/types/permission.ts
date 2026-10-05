@@ -2,10 +2,12 @@
  * Why a finding exists and how it should be explained. Codes describe objective on-chain facts only.
  * - SPL_TOKEN_DELEGATE_ACTIVE: delegate set, positive delegated amount, account initialized.
  * - SPL_TOKEN_DELEGATE_ZERO_AMOUNT: delegate set with a delegated amount of 0 (can move nothing until re-approved).
- * - SPL_TOKEN_DELEGATE_ACCOUNT_FROZEN: delegate set but the token account is frozen; the token program rejects
- *   revoke on frozen accounts, so this is view-only.
- * - SPL_TOKEN_DELEGATE_MINT_UNREADABLE: delegate set but the mint could not be read, so decimals are unknown;
- *   view-only until the scan can show the amount accurately.
+ * - SPL_TOKEN_DELEGATE_ACCOUNT_FROZEN: delegate set but the token account is frozen. View-only because the on-chain
+ *   program rejects Revoke with TokenError::AccountFrozen (0x11) before checking the owner. This is enforced by the
+ *   program (solana-program/token `process_revoke` and p-token `revoke.rs`), not by the @solana-program/token client.
+ * - SPL_TOKEN_DELEGATE_MINT_UNREADABLE: delegate set but the mint could not be read, so decimals are unknown.
+ *   Revoke itself does not read the mint; view-only is GuardRail policy so the user never confirms an amount
+ *   GuardRail cannot display accurately.
  */
 export type PermissionExplanationCode =
   | 'SPL_TOKEN_DELEGATE_ACTIVE'

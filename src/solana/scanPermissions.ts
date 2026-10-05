@@ -132,6 +132,7 @@ export function buildFinding(candidate: DelegateCandidate, decimals: number | nu
 }
 
 function explain(candidate: DelegateCandidate, decimals: number | null): PermissionExplanationCode {
+  // The on-chain Revoke processor fails with AccountFrozen on frozen accounts (see PermissionExplanationCode docs).
   if (candidate.state === AccountState.Frozen) {
     return 'SPL_TOKEN_DELEGATE_ACCOUNT_FROZEN'
   }

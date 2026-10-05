@@ -7,8 +7,16 @@ import { colors } from '@/src/constants/theme'
 export default function RootLayout() {
   return (
     <AppProviders>
-      <Stack screenOptions={{ contentStyle: { backgroundColor: colors.background } }}>
+      <Stack
+        screenOptions={{
+          contentStyle: { backgroundColor: colors.background },
+          headerStyle: { backgroundColor: colors.background },
+          headerTintColor: colors.text,
+          headerShadowVisible: false,
+        }}
+      >
         <Stack.Screen name="index" options={{ headerShown: false }} />
+        <Stack.Screen name="permission/[id]" options={{ title: 'Review permission' }} />
       </Stack>
       <StatusBar style="light" />
     </AppProviders>
