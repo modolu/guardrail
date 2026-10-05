@@ -216,7 +216,7 @@ async function fetchMintDecimals(
   return result
 }
 
-function decodeBase64(encoder: ReturnType<typeof getBase64Encoder>, value: string): Uint8Array {
+export function decodeBase64(encoder: ReturnType<typeof getBase64Encoder>, value: string): Uint8Array {
   try {
     return new Uint8Array(encoder.encode(value))
   } catch {

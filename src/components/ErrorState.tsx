@@ -6,11 +6,13 @@ export function ErrorState({
   message,
   code,
   onRetry,
+  retryLabel = 'Try again',
 }: {
   title: string
   message: string
   code?: string
   onRetry?: () => void
+  retryLabel?: string
 }) {
   return (
     <View style={styles.container} accessibilityRole="alert">
@@ -23,7 +25,7 @@ export function ErrorState({
           onPress={onRetry}
           style={({ pressed }) => [sharedStyles.secondaryButton, styles.retry, pressed && sharedStyles.pressed]}
         >
-          <Text style={sharedStyles.secondaryButtonText}>Try again</Text>
+          <Text style={sharedStyles.secondaryButtonText}>{retryLabel}</Text>
         </Pressable>
       ) : null}
     </View>

@@ -15,6 +15,7 @@
     "start": "expo start",
     "web": "expo start --web",
     "verify:scanner": "tsc -p scripts/tsconfig.verify.json && node .local/build/verify/scripts/verify-scanner.js",
+    "verify:revoke": "tsc -p scripts/tsconfig.verify.json && node .local/build/verify/scripts/verify-revoke.js",
     "fixture:create": "tsc -p scripts/tsconfig.verify.json && node .local/build/verify/scripts/create-demo-fixture.js",
     "fixture:verify": "tsc -p scripts/tsconfig.verify.json && node .local/build/verify/scripts/verify-demo-fixture.js"
   },

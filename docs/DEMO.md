@@ -80,6 +80,58 @@ rm .local/fixture/fixture.json .local/fixture/owner-keypair.json .local/fixture/
 npm run fixture:create
 ```
 
+## Revoke flow
+
+From a scanned finding that GuardRail marks revocable (standard SPL Token delegate, account not frozen, mint readable,
+owned by the connected wallet):
+
+1. **Permission screen** -> **Review revoke**. Nothing is built or sent yet.
+2. **Revoke review** (`app/revoke/[id].tsx`) shows what will change: the token account, the delegate that will be
+   removed, and the delegated amount that will be set to 0. It also states what stays the same (no tokens move; one
+   SPL Token `Revoke` instruction for this account only).
+3. **Approve in wallet.** GuardRail first re-reads the exact token account and refuses to continue if the delegate,
+   amount, or mint no longer matches what was reviewed, or if the account is frozen. It then sends one transaction
+   containing only the SPL Token `Revoke` instruction through Mobile Wallet Adapter (`useMobileWallet().sendTransactions`).
+   The owner is the fee payer and the only signer.
+4. **Wallet declined or closed** (MWA `-3 ERROR_NOT_SIGNED`, `-1 ERROR_AUTHORIZATION_FAILED`, session closed,
+   association cancelled) is treated as a normal outcome (`SIGNATURE_REJECTED`): the review screen stays, shows that
+   nothing was sent, and the user can approve again.
+5. **Result screen** (`app/result/[id].tsx`) polls `getSignatureStatuses` until the transaction is `confirmed` or
+   `finalized` (45 s timeout), then refetches the exact token account at or after the confirmation slot. It shows
+   **"Delegate removed"** only if the transaction succeeded **and** the refetched account has no delegate.
+6. Otherwise it shows why, with a Devnet Explorer link:
+   - `TRANSACTION_FAILED`: the transaction was confirmed but failed on-chain, so nothing changed.
+   - `VERIFICATION_FAILED`: not confirmed in time, or confirmed but the delegate is still shown. **Retry verification**
+     only re-reads Devnet. It never sends another transaction.
+   - `RPC_UNAVAILABLE` / `TOKEN_ACCOUNT_PARSE_FAILED`: the state could not be read; retry the same way.
+
+After a verified revoke the delegate disappears from the cached scan, and `npm run fixture:verify` should fail because
+the delegate is gone. Run `npm run fixture:create` to re-approve the same delegate and repeat the demo.
+
+### Verify without a device
+
+```sh
+npm run verify:revoke
+```
+
+Runs offline against a fake RPC. It checks:
+
+- Preconditions: wallet connected, owner is the connected wallet, standard SPL Token program, revocable, valid
+  addresses. Frozen, unreadable-mint, Token-2022 and not-owner cases are rejected before any RPC call or wallet request.
+- The instruction is SPL Token `Revoke` (data `[5]`, token account writable, owner) and nothing else.
+- Compiling that instruction with the `@solana/kit` 7.x copy bundled inside `@wallet-ui/react-native-kit` (the one
+  `sendTransactions` uses) gives a one-instruction, one-signer message with exactly three accounts: owner, token
+  account, token program.
+- Wallet cancellation maps to `SIGNATURE_REJECTED`; other wallet failures map to `TRANSACTION_FAILED`; nothing is
+  confirmed or verified after a rejection.
+- Stale state before signing (delegate removed, changed, different amount or mint, frozen, account gone) stops with
+  nothing sent.
+- Confirmation waits through pending and processed, detects on-chain failure, and times out deterministically.
+- Verification reports success only when confirmed and the refetched account has no delegate, reads at the
+  confirmation slot, and a retry after a "still delegated" read recovers without any write call.
+
+Not covered offline: the real wallet UI, real MWA errors, and real Devnet timing (see below).
+
 ## Using the fixture in the app (needs Android, not yet verified)
 
 GuardRail scans and revokes for whichever wallet is connected through Mobile Wallet Adapter. The fixture's delegate
@@ -95,3 +147,17 @@ emulator or device exists:
 
 Until an Android emulator or device is available, the connect -> scan -> revoke flow on Android is **unverified**.
 The fixture scripts are verified only from Node against Devnet.
+
+### Manual Android checklist (once a device exists)
+
+- [ ] Connect the wallet that owns the fixture token account; scan lists the 500-token delegate.
+- [ ] Review revoke shows the token account, delegate, and amount matching the permission screen.
+- [ ] Approve in wallet: the wallet's transaction preview shows a single SPL Token Revoke and the owner as signer.
+- [ ] Decline in the wallet: the app stays on review, shows "nothing was sent", and Approve works again.
+- [ ] Approve: result moves from "Confirming on Devnet" to "Delegate removed" with a working Explorer link.
+- [ ] `npm run fixture:verify` now fails (delegate gone); Back to scan no longer lists the finding.
+- [ ] With airplane mode on after approving: result shows a retryable not-verified state; after reconnecting,
+      **Retry verification** reaches "Delegate removed" without a second wallet prompt.
+- [ ] Confirm the real MWA cancellation error from the wallet is one of the codes listed above; if a wallet uses a
+      different shape, it surfaces as `TRANSACTION_FAILED` rather than a cancellation and
+      `isWalletRejection` in `src/solana/revoke.ts` needs that shape added.

@@ -1,5 +1,6 @@
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { useLocalSearchParams, useRouter } from 'expo-router'
+import { AddressField } from '@/src/components/AddressField'
 import { AmountRow } from '@/src/components/AmountRow'
 import { EmptyState } from '@/src/components/EmptyState'
 import {
@@ -51,6 +52,7 @@ export default function PermissionDetailScreen() {
 }
 
 function PermissionDetail({ finding, contextSlot }: { finding: PermissionFinding; contextSlot: bigint }) {
+  const router = useRouter()
   const unavailableReason = REVOKE_UNAVAILABLE_REASONS[finding.explanationCode]
 
   return (
@@ -91,16 +93,15 @@ function PermissionDetail({ finding, contextSlot }: { finding: PermissionFinding
 
       {finding.revocable ? (
         <View style={styles.section}>
-          {/* Revoke signing lands in the next task; no transaction can be built or sent from this screen. */}
+          {/* Opens the review screen only; nothing is built or sent until the user approves there. */}
           <Pressable
             accessibilityRole="button"
-            accessibilityState={{ disabled: true }}
-            disabled
-            style={[sharedStyles.primaryButton, styles.disabled]}
+            onPress={() => router.push({ pathname: '/revoke/[id]', params: { id: finding.id } })}
+            style={({ pressed }) => [sharedStyles.primaryButton, pressed && sharedStyles.pressed]}
           >
-            <Text style={sharedStyles.primaryButtonText}>Revoke Access</Text>
+            <Text style={sharedStyles.primaryButtonText}>Review revoke</Text>
           </Pressable>
-          <Text style={styles.footnote}>Revoke signing is not enabled in this build yet. Nothing has been sent.</Text>
+          <Text style={styles.footnote}>You will see what changes before anything is sent to your wallet.</Text>
         </View>
       ) : null}
 
@@ -108,17 +109,6 @@ function PermissionDetail({ finding, contextSlot }: { finding: PermissionFinding
         From the latest Devnet scan (slot {contextSlot.toString()}). Scan again to refresh.
       </Text>
     </ScrollView>
-  )
-}
-
-function AddressField({ label, address }: { label: string; address: string }) {
-  return (
-    <View style={styles.field}>
-      <Text style={styles.label}>{label}</Text>
-      <Text style={styles.address} selectable accessibilityLabel={`${label} ${address}`}>
-        {address}
-      </Text>
-    </View>
   )
 }
 
@@ -155,9 +145,6 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     padding: spacing.md,
   },
-  field: {
-    gap: spacing.xs,
-  },
   label: {
     color: colors.textMuted,
     fontSize: 13,
@@ -166,15 +153,6 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: 15,
     lineHeight: 21,
-  },
-  address: {
-    color: colors.text,
-    fontFamily: 'monospace',
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  disabled: {
-    opacity: 0.45,
   },
   footnote: {
     color: colors.textMuted,

@@ -13,5 +13,6 @@ Android-first Solana wallet security companion. Connects to an existing wallet v
 - `npm run lint:check` — ESLint
 - `npm run format:check` — Prettier
 - `npm run verify:scanner` — deterministic SPL Token delegate scanner checks (Node, no network or device)
+- `npm run verify:revoke` — deterministic revoke checks: preconditions, instruction, cancellation, confirmation, verification (Node, no network or device)
 - `npm run fixture:create` / `npm run fixture:verify` — real Devnet SPL Token delegate fixture, see [docs/DEMO.md](docs/DEMO.md)
 - `npm run android` — build and run on Android (requires Java + Android SDK)

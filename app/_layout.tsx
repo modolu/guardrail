@@ -17,6 +17,12 @@ export default function RootLayout() {
       >
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="permission/[id]" options={{ title: 'Review permission' }} />
+        <Stack.Screen name="revoke/[id]" options={{ title: 'Revoke access' }} />
+        {/* No way back into the review screen once a transaction has been submitted. */}
+        <Stack.Screen
+          name="result/[id]"
+          options={{ title: 'Revoke result', headerBackVisible: false, gestureEnabled: false }}
+        />
       </Stack>
       <StatusBar style="light" />
     </AppProviders>
