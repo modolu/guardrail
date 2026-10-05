@@ -1,24 +1,16 @@
 import { useCallback, useState } from 'react'
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import type { Address } from '@solana/kit'
 import { useMobileWallet } from '@wallet-ui/react-native-kit'
 import { EmptyState } from '@/src/components/EmptyState'
 import { ErrorState } from '@/src/components/ErrorState'
+import { PermissionCard } from '@/src/components/PermissionCard'
 import { ScanButton } from '@/src/components/ScanButton'
 import { WalletHeader } from '@/src/components/WalletHeader'
 import { colors, sharedStyles, spacing } from '@/src/constants/theme'
-import type { AppError } from '@/src/types/errors'
-
-// TODO(Task 4): add a `results` state carrying PermissionFinding[] once real scanning exists.
-type ScanState =
-  { status: 'idle' } | { status: 'scanning' } | { status: 'empty' } | { status: 'error'; error: AppError }
-
-// TEMPORARY UI-ONLY MOCK — Task 4 replaces this with a real SPL Token delegate scan.
-// It performs no RPC calls and always reports zero findings.
-async function mockScanPlaceholder(_owner: string): Promise<readonly never[]> {
-  await new Promise((resolve) => setTimeout(resolve, 600))
-  return []
-}
+import { usePermissionScan } from '@/src/hooks/usePermissionScan'
+import type { PermissionScanResult } from '@/src/types/permission'
 
 function networkBadgeLabel(chain: string): string {
   return (chain.split(':')[1] ?? chain).toUpperCase()
@@ -93,31 +85,13 @@ function ConnectedView({
   networkLabel,
   disconnect,
 }: {
-  address: string
+  address: Address
   label?: string
   networkLabel: string
   disconnect: () => Promise<void>
 }) {
-  const [scan, setScan] = useState<ScanState>({ status: 'idle' })
+  const { state: scan, scan: handleScan } = usePermissionScan(address)
   const [disconnecting, setDisconnecting] = useState(false)
-
-  const handleScan = useCallback(async () => {
-    setScan({ status: 'scanning' })
-    try {
-      const findings = await mockScanPlaceholder(address)
-      if (findings.length === 0) {
-        setScan({ status: 'empty' })
-      }
-    } catch (e) {
-      setScan({
-        status: 'error',
-        error: {
-          code: 'RPC_UNAVAILABLE',
-          message: e instanceof Error ? e.message : 'The Devnet RPC request did not complete.',
-        },
-      })
-    }
-  }, [address])
 
   const handleDisconnect = useCallback(async () => {
     setDisconnecting(true)
@@ -144,12 +118,7 @@ function ConnectedView({
         </Text>
       </View>
       <ScanButton onPress={handleScan} scanning={scan.status === 'scanning'} />
-      {scan.status === 'empty' ? (
-        <EmptyState
-          title="No supported active delegates"
-          message="None of this wallet's standard SPL Token accounts on Devnet currently have an active delegate. Other authority types are not checked."
-        />
-      ) : null}
+      {scan.status === 'results' ? <ScanResults result={scan.result} /> : null}
       {scan.status === 'error' ? (
         <ErrorState
           title="Scan did not complete"
@@ -158,6 +127,38 @@ function ConnectedView({
           onRetry={handleScan}
         />
       ) : null}
+    </View>
+  )
+}
+
+function ScanResults({ result }: { result: PermissionScanResult }) {
+  const skippedNote =
+    result.skippedAccountCount > 0
+      ? `${result.skippedAccountCount} account${result.skippedAccountCount === 1 ? '' : 's'} could not be read and ${result.skippedAccountCount === 1 ? 'was' : 'were'} not included.`
+      : null
+
+  if (result.findings.length === 0) {
+    return (
+      <View style={styles.results}>
+        <EmptyState
+          title="No supported active delegates"
+          message="None of this wallet's standard SPL Token accounts on Devnet currently have an active delegate. Other authority types are not checked."
+        />
+        {skippedNote ? <Text style={styles.note}>{skippedNote}</Text> : null}
+      </View>
+    )
+  }
+
+  return (
+    <View style={styles.results}>
+      <Text style={styles.summary}>
+        {result.findings.length} active delegate{result.findings.length === 1 ? '' : 's'} across{' '}
+        {result.scannedAccountCount} SPL Token account{result.scannedAccountCount === 1 ? '' : 's'}
+      </Text>
+      {result.findings.map((finding) => (
+        <PermissionCard key={finding.id} finding={finding} />
+      ))}
+      {skippedNote ? <Text style={styles.note}>{skippedNote}</Text> : null}
     </View>
   )
 }
@@ -204,6 +205,14 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: 22,
     fontWeight: '700',
+  },
+  results: {
+    gap: spacing.md,
+  },
+  summary: {
+    color: colors.text,
+    fontSize: 15,
+    fontWeight: '600',
   },
   subheading: {
     color: colors.textMuted,

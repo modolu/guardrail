@@ -12,4 +12,5 @@ Android-first Solana wallet security companion. Connects to an existing wallet v
 - `npx tsc --noEmit` — typecheck
 - `npm run lint:check` — ESLint
 - `npm run format:check` — Prettier
+- `npm run verify:scanner` — deterministic SPL Token delegate scanner checks (Node, no network or device)
 - `npm run android` — build and run on Android (requires Java + Android SDK)
