@@ -1,0 +1,14 @@
+# Add files here to ignore them from prettier formatting
+/.expo
+/android
+/coverage
+/dist
+/ios
+/tmp
+pnpm-lock.yaml
+.agents
+agent
+pnpm-workspace.yaml
+CLAUDE.md
+.claude-empty-mcp.json
+.local
