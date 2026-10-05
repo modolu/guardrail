@@ -51,6 +51,10 @@ The public Devnet faucet often answers `429 Too Many Requests`. When all retries
 anything and prints the owner address. Fund it manually with at least 0.05 SOL at <https://faucet.solana.com> (choose
 Devnet), or wait and retry, then rerun `npm run fixture:create`. The script does not use any paid RPC.
 
+**Current status:** every airdrop attempt for the fixture owner `EQ8twh3xGQafRDsuGSwDho2Qqd7aYVswcjQ9YyJTE2nh`
+returned HTTP 429, so the fixture has not been created on-chain (no `fixture.json` exists). The owner needs at least
+0.05 Devnet SOL. Fund that public address, then run `npm run fixture:create`.
+
 To use a different Devnet RPC, set `EXPO_PUBLIC_SOLANA_RPC_URL` in `.env` (see `.env.example`). The scripts load `.env`
 and still refuse anything that is not Devnet. The URL is never printed, in case it contains an API key.
 

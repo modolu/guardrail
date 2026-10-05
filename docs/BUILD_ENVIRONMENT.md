@@ -49,8 +49,9 @@ to `node_modules` and is not used by the app.
 
 `@wallet-ui/react-native-kit@4.3` bundles its own `@solana/kit@7.x`, while the app uses `@solana/kit@6.x`. Their RPC
 types are not assignable to each other, so the scanner uses its own Kit 6 Devnet RPC (`src/solana/rpc.ts`) built from
-the same `SOLANA_RPC_URL` as the wallet provider, rather than `useMobileWallet().client.rpc`. Transactions handed to the
-wallet for signing (revoke) will cross this boundary and need checking when that work starts.
+the same `SOLANA_RPC_URL` as the wallet provider, rather than `useMobileWallet().client.rpc`. The revoke instruction
+crosses this boundary through one documented cast in `src/hooks/useRevokeSubmission.ts`; `npm run verify:revoke`
+compiles it with the wallet library's Kit 7 to check the runtime shape.
 
 ## Not installed (Android blockers)
 
