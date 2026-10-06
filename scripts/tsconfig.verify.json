@@ -10,5 +10,11 @@
     "rootDir": "..",
     "outDir": "../.local/build/verify"
   },
-  "files": ["verify-scanner.ts", "verify-revoke.ts", "create-demo-fixture.ts", "verify-demo-fixture.ts"]
+  "files": [
+    "verify-scanner.ts",
+    "verify-revoke.ts",
+    "verify-flow.ts",
+    "create-demo-fixture.ts",
+    "verify-demo-fixture.ts"
+  ]
 }
