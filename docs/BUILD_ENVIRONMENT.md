@@ -100,8 +100,10 @@ alternative, but it needs the owner's Expo account.
 `.github/workflows/android-apk.yml` builds the release APK on `ubuntu-latest` (Node 22, Temurin JDK 17, the runner's
 preinstalled Android SDK), so no local JDK or SDK is needed. It runs on manual dispatch and on pushes to `main` that
 change more than docs/Markdown. Steps: `npm ci`, `npm run ci` (typecheck, lint, format, `expo prebuild -p android`),
-the three offline verifiers, `./gradlew assembleRelease`, then upload of the artifact `guardrail-release-apk`
-(`app-release.apk`, kept 30 days). No secrets are used. The app uses Devnet unless `EXPO_PUBLIC_SOLANA_RPC_URL` is set,
+the three offline verifiers, `./gradlew assembleRelease -PreactNativeArchitectures=arm64-v8a`, then upload of the
+artifact `guardrail-release-apk` (`app-release.apk`, kept 30 days). The CI APK is **arm64-v8a only**: the demo target is
+Solana Mobile/Seeker (arm64), and compiling all four ABIs from the generated `gradle.properties` made the build too slow.
+It will not install on x86/x86_64 emulators or 32-bit-only devices; drop the `-P` flag for a universal build. No secrets are used. The app uses Devnet unless `EXPO_PUBLIC_SOLANA_RPC_URL` is set,
 and the workflow does not set it.
 
 ```sh
