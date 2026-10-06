@@ -53,6 +53,7 @@ app-example
 *.keystore
 *keypair*.json
 id.json
+keystore.properties
 
 # GuardRail: local Claude tooling
 .claude-empty-mcp.json
