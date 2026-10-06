@@ -1,6 +1,6 @@
 # Build Environment
 
-Recorded 2026-10-05 on macOS (Darwin 23.4.0).
+Recorded 2026-10-05 on macOS (Darwin 23.4.0); rechecked 2026-10-06.
 
 ## Toolchain
 
@@ -8,6 +8,9 @@ Recorded 2026-10-05 on macOS (Darwin 23.4.0).
 | ---- | ------- |
 | Node | 22.12.0 |
 | npm  | 10.9.0  |
+
+`@solana-program/token@0.14.0` declares `node >=24`, so npm prints an `EBADENGINE` warning on Node 22. Install,
+typecheck, verifiers and the Android JS bundle all work on Node 22.12.
 
 ## Key dependencies (from `package.json`)
 
@@ -17,7 +20,8 @@ Recorded 2026-10-05 on macOS (Darwin 23.4.0).
 | expo-router                    | ~55.0.7        |
 | expo-dev-client                | ~55.0.18       |
 | react                          | 19.2.0         |
-| react-native                   | 0.83.6         |
+| react-native                   | 0.83.10        |
+| react-native-reanimated        | 4.2.1          |
 | @solana/kit                    | ^6.1.0         |
 | @wallet-ui/react-native-kit    | ^4.0.1         |
 | @solana-program/memo           | ^0.11.0        |
@@ -59,18 +63,51 @@ compiles it with the wallet library's Kit 7 to check the runtime shape.
 - **Android SDK**: not installed (`ANDROID_HOME` unset, no `~/Library/Android/sdk`, no `adb`).
 - **Android emulator / device**: none available.
 
-Consequences: `npm run android` and `npm run android:build` (prebuild + Gradle) cannot be run or verified.
-Everything on Android — Mobile Wallet Adapter connection, signing, and UI — is **unverified** until these are installed.
+- **Disk**: about 3.3 GiB free on 2026-10-06, which is not enough for a JDK, the Android SDK and NDK, the Gradle cache
+  and a four-ABI React Native build.
+
+Consequences: `npm run android` and the Gradle build cannot run, so **no APK has been built**. `npm run android:build`
+is only `expo prebuild -p android`, which does run (it is part of `npm run ci`) and generates the ignored `android/`
+project. Everything on Android (Mobile Wallet Adapter connection, signing and UI) is **unverified** until the toolchain
+and a device or emulator exist.
+
+## Release APK (not built yet)
+
+Once a JDK 17 and the Android SDK are installed (`ANDROID_HOME` set, or `android/local.properties` with `sdk.dir`):
+
+```sh
+npm ci
+npm run android:build                      # expo prebuild -p android
+cd android && ./gradlew assembleRelease    # output: android/app/build/outputs/apk/release/app-release.apk
+```
+
+Release metadata comes from `app.json`: app name `GuardRail`, package `com.guardrail.app`, version `1.0.0`,
+`versionCode` 1 (bump it for every uploaded build). `android.blockedPermissions` removes `SYSTEM_ALERT_WINDOW` and the
+external storage permissions from the main manifest, which leaves `INTERNET` and the template's `VIBRATE`. Debug builds
+still get `SYSTEM_ALERT_WINDOW` from the generated debug manifest for the dev client. The final merged manifest has not
+been checked because Gradle has not run. Check it with `aapt dump permissions` on the built APK.
+
+Signing: the generated `android/app/build.gradle` signs `release` with the template `debug.keystore`. That is enough
+for a sideloadable hackathon APK, but not for the dApp Store, which needs a dedicated release key that is kept for every
+future update. To set one up, create the keystore with `keytool` **outside the repo**, put the passwords in
+`~/.gradle/gradle.properties` (not in the repo), and point `signingConfigs.release` at them in
+`android/app/build.gradle`. `android/` is generated and ignored, so redo that edit after `expo prebuild --clean`.
+`*.keystore`, `*.jks` and `keystore.properties` are gitignored. EAS Build with Expo-managed credentials is an
+alternative, but it needs the owner's Expo account.
 
 ## Checks that run without a device
 
 ```sh
-npx tsc --noEmit
-npm run lint:check
-npm run format:check
+npm run ci                    # tsc --noEmit, lint:check, format:check, expo prebuild -p android
 npm run verify:scanner        # deterministic SPL Token parser/scanner checks (Node, no network)
-npx expo export --platform android --output-dir /tmp/guardrail-export   # proves Metro bundling for Android
+npm run verify:revoke         # revoke preconditions, instruction, confirmation, verification (fake RPC)
+npm run verify:flow           # scan -> revoke -> verify end to end (fake RPC)
+npm run doctor                # expo-doctor
+npx expo export --platform android --output-dir /tmp/guardrail-export   # production Hermes bundle for Android
 ```
+
+Results on 2026-10-06: `ci` passes, `verify:scanner` 17/17, `verify:revoke` 25/25, `verify:flow` 5/5, expo-doctor 20/20,
+and the Android export produces a 6.5 MB Hermes bundle.
 
 `verify:scanner` compiles `scripts/verify-scanner.ts` with `scripts/tsconfig.verify.json` into the ignored
 `.local/build/verify/` and runs it with Node. Fixtures are hand-built SPL Token Account (165 B) and Mint (82 B) byte

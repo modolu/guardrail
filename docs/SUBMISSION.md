@@ -10,7 +10,8 @@ Submission date: **2026-10-08 (GMT+1)**. Items marked **TODO** are not done yet;
 - **Platform:** Android only, Solana Mobile Wallet Adapter
 - **Network:** Solana Devnet only
 - **GitHub:** <https://github.com/modolu/guardrail>
-- **APK:** **TODO** `<APK download URL>` (no release APK has been built; no Android SDK is installed on the build machine)
+- **APK:** **TODO** `<APK download URL>` (no release APK has been built: no JDK or Android SDK on the build machine; see
+  [BUILD_ENVIRONMENT.md](BUILD_ENVIRONMENT.md#release-apk-not-built-yet))
 - **Demo video:** **TODO** `<demo video URL>` (not recorded; needs a device or emulator)
 - **dApp Store:** **TODO** `<dApp Store listing URL>` (not submitted; see
   [DAPP_STORE_SUBMISSION.md](DAPP_STORE_SUBMISSION.md))
@@ -79,7 +80,7 @@ Not verified on a device: every Android path (see [README.md](../README.md#limit
 ## Current blocker
 
 The Devnet fixture has not been created on-chain. The public Devnet faucet answered **HTTP 429** to every airdrop
-request for the fixture owner `EQ8twh3xGQafRDsuGSwDho2Qqd7aYVswcjQ9YyJTE2nh`. The owner needs at least **0.05 Devnet
+request for the fixture owner `EQ8twh3xGQafRDsuGSwDho2Qqd7aYVswcjQ9YyJTE2nh` (last tried 2026-10-06). The owner needs at least **0.05 Devnet
 SOL** before `npm run fixture:create` can create the mint and token account. Until then there is no real delegate to scan,
 so no real Devnet revoke transaction exists and the transaction-proof field above stays empty.
 
@@ -95,4 +96,4 @@ Devnet wallet, wait and rerun the script, or set `EXPO_PUBLIC_SOLANA_RPC_URL` in
 - [ ] Record the demo video; fill in the link
 - [ ] Run the revoke on Devnet; record the transaction signature and Explorer link
 - [ ] dApp Store: complete [DAPP_STORE_SUBMISSION.md](DAPP_STORE_SUBMISSION.md); fill in the listing link only if published
-- [ ] Re-run typecheck, lint, format check, `verify:scanner`, `verify:revoke` on the final commit
+- [ ] Re-run `npm run ci`, `verify:scanner`, `verify:revoke`, `verify:flow` on the final commit

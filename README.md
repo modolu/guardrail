@@ -5,8 +5,8 @@ your standard SPL Token accounts for active delegate approvals, explains each on
 supported delegate, and then verifies on-chain that the delegate is really gone.
 
 > **Status (hackathon build, Solana Devnet only).** The scan, revoke and verify logic is implemented and checked offline
-> from Node. The Android app has **not** been run on a device or emulator, and the Devnet demo fixture has **not** been
-> created yet. See [Limitations and unverified items](#limitations-and-unverified-items) and
+> from Node. No APK has been built, the Android app has **not** been run on a device or emulator, and the Devnet demo
+> fixture has **not** been created yet. See [Limitations and unverified items](#limitations-and-unverified-items) and
 > [Current blocker](#current-blocker-devnet-fixture-funding).
 
 ## Submission links
@@ -49,12 +49,15 @@ published build. See [docs/BUILD_ENVIRONMENT.md](docs/BUILD_ENVIRONMENT.md) for 
 
 All of these run on a laptop with no device. Only the two fixture commands need the network.
 
+- `npm run ci`: typecheck, lint, format check and `expo prebuild -p android` in one command
 - `npx tsc --noEmit`: TypeScript strict typecheck
 - `npm run lint:check`: ESLint (Expo config)
 - `npm run format:check`: Prettier
 - `npm run verify:scanner`: token account and mint parsing, option tags, finding construction, wording rules
 - `npm run verify:revoke`: preconditions, single `Revoke` instruction, cancellation, stale state, confirmation,
   verification
+- `npm run verify:flow`: scan -> revoke -> verify end to end against a fake RPC
+- `npm run doctor`: expo-doctor
 - `npm run fixture:create`: creates or reuses the Devnet fixture (needs a funded owner, see below; uses the network)
 - `npm run fixture:verify`: read-only check of the fixture on Devnet (uses the network)
 - `npm run android:build`: `expo prebuild -p android`, generates the ignored `android/` project (no Gradle build)
@@ -76,7 +79,8 @@ Keys are never printed or committed.
 
 ## Current blocker: Devnet fixture funding
 
-The public Devnet faucet returned **HTTP 429** for every airdrop request for the owner address above. The owner needs
+The public Devnet faucet returned **HTTP 429** for every airdrop request for the owner address above (last tried
+2026-10-06; balance still 0). The owner needs
 at least **0.05 Devnet SOL** before `npm run fixture:create` can run. Until then there is no real delegate on Devnet and
 no real revoke transaction exists. Fund the owner at <https://faucet.solana.com> (Devnet) or from another Devnet wallet,
 or point `EXPO_PUBLIC_SOLANA_RPC_URL` at another Devnet RPC, then rerun `npm run fixture:create`.
@@ -147,7 +151,8 @@ notifications, backend or database, analytics, security scoring or reputation, A
 
 **Not verified on Android (no Java, Android SDK, emulator or device on the build machine):**
 
-- Building and installing the APK, and `expo prebuild` followed by a Gradle build.
+- Building and installing the APK. `expo prebuild` runs, but the Gradle build does not (see
+  [docs/BUILD_ENVIRONMENT.md](docs/BUILD_ENVIRONMENT.md#release-apk-not-built-yet)).
 - Mobile Wallet Adapter connect, disconnect and `sendTransactions` against a real wallet, including the real
   cancellation error shapes (`isWalletRejection` matches the documented ones by name and code).
 - That the wallet shows a single `Revoke` instruction with the owner as signer.

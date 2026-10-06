@@ -20,7 +20,7 @@ session.
 
 - **App name:** GuardRail (from `app.json`)
 - **Android package:** `com.guardrail.app` (from `app.json`)
-- **Version:** `1.0.0`; use an increasing Android `versionCode` for each release. **CONFIRM** versionCode handling.
+- **Version:** `1.0.0`, Android `versionCode` 1 (both in `app.json`). Increase `versionCode` for every uploaded build.
 - **Category:** Tools, Utilities or Security, whichever the store offers. **CONFIRM** category list.
 - **Short description (draft):** Review and revoke SPL Token delegate permissions on your Solana wallet (Devnet).
 - **Source code:** <https://github.com/modolu/guardrail>
@@ -47,14 +47,17 @@ session.
 - The app reads public on-chain data from the configured Devnet RPC (default `https://api.devnet.solana.com`), so that
   RPC provider sees the connected wallet address and the app's IP address.
 - Private keys never reach GuardRail. Signing happens in the user's wallet app through Mobile Wallet Adapter.
-- **TODO** after building: list the Android permissions in the generated manifest and confirm they match this statement.
+- Android permissions: the generated main manifest requests `INTERNET` and the template's `VIBRATE` (the app does not
+  vibrate). `SYSTEM_ALERT_WINDOW`, `READ_EXTERNAL_STORAGE` and `WRITE_EXTERNAL_STORAGE` are removed via
+  `android.blockedPermissions` in `app.json`. **TODO** once an APK is built, confirm the final merged list with
+  `aapt dump permissions`; libraries can add permissions during the Gradle manifest merge.
 
 ## Assets
 
 Prepare these; **CONFIRM** exact formats, sizes and counts in the publisher docs first.
 
-- [ ] App icon (store listing). `assets/images/icon.png` exists from the scaffold; **check whether it is still the
-      template default** before using it.
+- [ ] App icon (store listing). `assets/images/icon.png`, the adaptive icon layers (`android-icon-*.png`) and
+      `splash-icon.png` are all still the **Expo template defaults**. Replace them before submitting.
 - [ ] Banner / feature graphic, if the listing requires one.
 - [ ] Phone screenshots of the real app on Android: connect, scan result, permission detail, revoke review, verified
       result. **Cannot be captured yet: no device or emulator.**
@@ -65,10 +68,11 @@ Prepare these; **CONFIRM** exact formats, sizes and counts in the publisher docs
 
 - [ ] Install Java and the Android SDK (not installed on the current build machine, see
       [BUILD_ENVIRONMENT.md](BUILD_ENVIRONMENT.md)).
-- [ ] `npm run android:build` (Expo prebuild) then a Gradle release build; **CONFIRM** the command and whether to use EAS
-      or a local build.
-- [ ] Create a release keystore **outside the repo** (`*.keystore` and `*.jks` are gitignored). Back it up; losing it
-      blocks future updates. Never commit it or its passwords.
+- [ ] `npm run android:build` (Expo prebuild) then `cd android && ./gradlew assembleRelease`, or EAS Build. Steps
+      are in [BUILD_ENVIRONMENT.md](BUILD_ENVIRONMENT.md#release-apk-not-built-yet).
+- [ ] Create a release keystore **outside the repo** (`*.keystore`, `*.jks` and `keystore.properties` are gitignored).
+      Back it up; losing it blocks future updates. Never commit it or its passwords. The generated project signs
+      `release` with the template debug key until this is configured.
 - [ ] Install the release APK on a device and run the manual checklist in [DEMO.md](DEMO.md) against the release
       build, not only a debug build.
 - [ ] Confirm the release build points at Devnet and uses no private RPC key (`EXPO_PUBLIC_*` values are embedded in the
