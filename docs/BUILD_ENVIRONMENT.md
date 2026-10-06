@@ -95,6 +95,24 @@ future update. To set one up, create the keystore with `keytool` **outside the r
 `*.keystore`, `*.jks` and `keystore.properties` are gitignored. EAS Build with Expo-managed credentials is an
 alternative, but it needs the owner's Expo account.
 
+## Cloud APK build (GitHub Actions)
+
+`.github/workflows/android-apk.yml` builds the release APK on `ubuntu-latest` (Node 22, Temurin JDK 17, the runner's
+preinstalled Android SDK), so no local JDK or SDK is needed. It runs on manual dispatch and on pushes to `main` that
+change more than docs/Markdown. Steps: `npm ci`, `npm run ci` (typecheck, lint, format, `expo prebuild -p android`),
+the three offline verifiers, `./gradlew assembleRelease`, then upload of the artifact `guardrail-release-apk`
+(`app-release.apk`, kept 30 days). No secrets are used. The app uses Devnet unless `EXPO_PUBLIC_SOLANA_RPC_URL` is set,
+and the workflow does not set it.
+
+```sh
+gh workflow run android-apk.yml --ref main          # or: Actions tab -> Android APK -> Run workflow
+gh run watch                                        # follow the run
+gh run download <run-id> -n guardrail-release-apk   # or: download from the run's Artifacts section
+```
+
+This APK is signed with the template debug keystore (see Signing above). It is for hackathon/demo sideloading only, not
+for dApp Store production signing.
+
 ## Checks that run without a device
 
 ```sh
