@@ -47,7 +47,7 @@ published build. See [docs/BUILD_ENVIRONMENT.md](docs/BUILD_ENVIRONMENT.md) for 
 
 ## Verification commands
 
-All of these run on a laptop with no device. Only the two fixture commands need the network.
+All of these run on a laptop with no device. Only the fixture commands need the network.
 
 - `npm run ci`: typecheck, lint, format check and `expo prebuild -p android` in one command
 - `npx tsc --noEmit`: TypeScript strict typecheck
@@ -57,9 +57,12 @@ All of these run on a laptop with no device. Only the two fixture commands need 
 - `npm run verify:revoke`: preconditions, single `Revoke` instruction, cancellation, stale state, confirmation,
   verification
 - `npm run verify:flow`: scan -> revoke -> verify end to end against a fake RPC
+- `npm run verify:demo-approve`: Devnet demo setup gate and its single `ApproveChecked` (500 tokens, 6 decimals)
 - `npm run doctor`: expo-doctor
 - `npm run fixture:create`: creates or reuses the Devnet fixture (needs a funded owner, see below; uses the network)
 - `npm run fixture:verify`: read-only check of the fixture on Devnet (uses the network)
+- `npm run fixture:wallet:create` / `fixture:wallet:verify`: token account owned by a real wallet for the in-app demo
+  approve (`FIXTURE_WALLET_OWNER=<address>`; see docs/DEMO.md; uses the network)
 - `npm run android:build`: `expo prebuild -p android`, generates the ignored `android/` project (no Gradle build)
 
 ## Devnet fixture

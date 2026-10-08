@@ -10,3 +10,11 @@ export class AppConfig {
   static identity: AppIdentity = { name: 'GuardRail' }
   static networks: SolanaCluster[] = [createSolanaDevnet({ url: SOLANA_RPC_URL })]
 }
+
+// Devnet demo setup (docs/DEMO.md). Off unless the build sets EXPO_PUBLIC_DEMO_SETUP=1. Public addresses only.
+// Read with literal `process.env.EXPO_PUBLIC_*` access so Expo inlines the values at build time.
+export const DEMO_SETUP_ENV = {
+  setup: process.env.EXPO_PUBLIC_DEMO_SETUP,
+  mint: process.env.EXPO_PUBLIC_DEMO_MINT,
+  delegate: process.env.EXPO_PUBLIC_DEMO_DELEGATE,
+}

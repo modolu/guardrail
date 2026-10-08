@@ -3,6 +3,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import type { Address } from '@solana/kit'
 import { useMobileWallet } from '@wallet-ui/react-native-kit'
+import { DemoSetupPanel } from '@/src/components/DemoSetupPanel'
 import { EmptyState } from '@/src/components/EmptyState'
 import { ErrorState } from '@/src/components/ErrorState'
 import { PermissionCard } from '@/src/components/PermissionCard'
@@ -117,6 +118,7 @@ function ConnectedView({
           Scan your standard SPL Token accounts for active delegate approvals on Solana Devnet.
         </Text>
       </View>
+      <DemoSetupPanel onApproved={handleScan} />
       <ScanButton onPress={handleScan} scanning={scan.status === 'scanning'} />
       {scan.status === 'results' ? <ScanResults result={scan.result} /> : null}
       {scan.status === 'error' ? (

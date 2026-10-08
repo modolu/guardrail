@@ -261,9 +261,14 @@ const AIRDROP_ATTEMPTS = 3
  * Ensure `owner` holds at least MIN_OWNER_BALANCE via the public Devnet faucet (requestAirdrop).
  * Retries with backoff; on persistent failure throws a FixtureError explaining how to fund manually.
  */
-export async function ensureFunded(rpc: DevnetRpc, owner: Address, log: (line: string) => void): Promise<string[]> {
+export async function ensureFunded(
+  rpc: DevnetRpc,
+  owner: Address,
+  log: (line: string) => void,
+  { role = 'owner', rerun = 'npm run fixture:create' }: { role?: string; rerun?: string } = {},
+): Promise<string[]> {
   const balance = (await rpc.getBalance(owner, { commitment: COMMITMENT }).send()).value
-  log(`Owner balance: ${formatRawAmount(balance, 9)} SOL`)
+  log(`${role[0].toUpperCase()}${role.slice(1)} balance: ${formatRawAmount(balance, 9)} SOL`)
   if (balance >= MIN_OWNER_BALANCE) {
     return []
   }
@@ -293,8 +298,8 @@ export async function ensureFunded(rpc: DevnetRpc, owner: Address, log: (line: s
     [
       `Devnet airdrop failed after ${AIRDROP_ATTEMPTS} attempts. The public faucet is probably rate-limited.`,
       ...errors.map((e) => `  - ${e}`),
-      `Fund the fixture owner manually, then rerun npm run fixture:create:`,
-      `  owner: ${owner}`,
+      `Fund the fixture ${role} manually, then rerun ${rerun}:`,
+      `  ${role}: ${owner}`,
       `  https://faucet.solana.com (select Devnet), or wait and retry later.`,
       `Needs at least ${formatRawAmount(MIN_OWNER_BALANCE, 9)} SOL. Nothing was created on-chain.`,
     ].join('\n'),

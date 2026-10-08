@@ -146,11 +146,57 @@ emulator or device exists:
    CLI keypair format; how to import it depends on the wallet (some accept the JSON byte array, others need a base58
    private key). This is a development-only key holding only Devnet SOL and demo tokens. Never use it on mainnet or
    reuse a real wallet's key here.
-2. **Create the permission from the test wallet itself**: fund the wallet's own address on Devnet and run the same
-   mint/approve steps with that address as owner. This needs a signer for the wallet's key, so it is not automated yet.
+2. **Create the permission from the test wallet itself** (no private key leaves the wallet). See
+   [Wallet-owned fixture and in-app demo approve](#wallet-owned-fixture-and-in-app-demo-approve).
 
 Until an Android emulator or device is available, the connect -> scan -> revoke flow on Android is **unverified**.
 The fixture scripts are verified only from Node against Devnet.
+
+## Wallet-owned fixture and in-app demo approve
+
+For a demo with a real Android wallet whose key stays in the wallet. Devnet only.
+
+**Mac side** (no wallet key, no approval):
+
+```sh
+FIXTURE_WALLET_OWNER=<wallet address> npm run fixture:wallet:create
+npm run fixture:wallet:verify            # passes in either state: ready or approved
+```
+
+`fixture:wallet:create` reuses `.local/fixture/owner-keypair.json` as the **payer and mint authority** (it must hold
+at least 0.05 Devnet SOL; the script tries the faucet first). It creates a 6-decimal mint, creates the wallet's
+associated token account, mints 1000 tokens to it, and sends the wallet 0.01 Devnet SOL for fees if it has less than
+0.005 SOL. It sends **no approval**. Public metadata goes to `.local/fixture/wallet-fixture.json` (separate from
+`fixture.json`). The demo delegate is the public address of `.local/fixture/delegate-keypair.json`. The script prints
+the three app build values.
+
+**App side**: build with the values the script printed. The Devnet demo setup panel appears on the home screen only when
+`EXPO_PUBLIC_DEMO_SETUP=1` and both addresses are valid. Without the gate the app is unchanged.
+Metro caches inlined `EXPO_PUBLIC_*` values, so clear its cache whenever you switch the gate on or off for a local
+build (`npm run dev` already passes `--clear`; otherwise add `--clear`).
+
+```sh
+EXPO_PUBLIC_DEMO_SETUP=1
+EXPO_PUBLIC_DEMO_MINT=<mint>
+EXPO_PUBLIC_DEMO_DELEGATE=<delegate>
+```
+
+For a CI APK, run the **Android APK** workflow manually with the `demo_mint` and `demo_delegate` inputs. The artifact
+is then named `guardrail-demo-setup-apk`. Push builds never set these inputs.
+
+**Approve 500 demo tokens** first checks that the RPC genesis hash is Devnet, the wallet chain is `solana:devnet`, the
+mint is a standard SPL Token mint with 6 decimals, and the wallet's token account for that mint exists, is not frozen,
+and has **no delegate** (demo setup never replaces an existing delegate). Then the wallet is asked to sign one
+transaction containing only SPL Token `ApproveChecked` for exactly 500 tokens (raw `500000000`, decimals 6). After
+confirmation the app re-reads the token account. It reports success only if the account shows exactly the demo delegate
+for exactly 500 tokens, and then it rescans. Wallet cancellation is `SIGNATURE_REJECTED` and nothing is sent.
+
+Afterwards `npm run fixture:wallet:verify -- --expect=approved` confirms it from the Mac, including through GuardRail's
+scanner. After an in-app revoke, `npm run fixture:wallet:verify -- --expect=ready` confirms the delegate is gone, and
+the panel can approve again.
+
+`npm run verify:demo-approve` checks all of this offline: the gate, the exact instruction bytes, the wallet-ui Kit
+compilation, every refusal before signing, cancellation, and post-approve verification.
 
 ### Manual Android checklist (once a device exists)
 

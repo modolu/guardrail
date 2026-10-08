@@ -5,6 +5,16 @@ name: Android APK
 
 on:
   workflow_dispatch:
+    # Optional Devnet demo setup build (docs/DEMO.md). Leave both empty for a normal build. Public addresses only.
+    inputs:
+      demo_mint:
+        description: 'EXPO_PUBLIC_DEMO_MINT for a Devnet demo setup build (empty = normal build)'
+        required: false
+        default: ''
+      demo_delegate:
+        description: 'EXPO_PUBLIC_DEMO_DELEGATE for a Devnet demo setup build (empty = normal build)'
+        required: false
+        default: ''
   push:
     branches: [main]
     paths-ignore:
@@ -49,6 +59,25 @@ jobs:
           npm run verify:scanner
           npm run verify:revoke
           npm run verify:flow
+          npm run verify:demo-approve
+
+      # Manual runs with demo inputs only. Push builds never set these, so the demo setup panel stays off.
+      - name: Enable Devnet demo setup
+        if: ${{ github.event_name == 'workflow_dispatch' && (inputs.demo_mint != '' || inputs.demo_delegate != '') }}
+        env:
+          DEMO_MINT: ${{ inputs.demo_mint }}
+          DEMO_DELEGATE: ${{ inputs.demo_delegate }}
+        run: |
+          base58='^[1-9A-HJ-NP-Za-km-z]{32,44}$'
+          if [[ ! "$DEMO_MINT" =~ $base58 || ! "$DEMO_DELEGATE" =~ $base58 ]]; then
+            echo "demo_mint and demo_delegate must both be base58 addresses"
+            exit 1
+          fi
+          {
+            echo "EXPO_PUBLIC_DEMO_SETUP=1"
+            echo "EXPO_PUBLIC_DEMO_MINT=$DEMO_MINT"
+            echo "EXPO_PUBLIC_DEMO_DELEGATE=$DEMO_DELEGATE"
+          } >> "$GITHUB_ENV"
 
       # Demo target is Solana Mobile/Seeker (arm64), so build only arm64-v8a instead of the four ABIs in the
       # generated gradle.properties. The APK still bundles the JS and runs standalone. Not a universal store build.
@@ -58,7 +87,7 @@ jobs:
 
       - uses: actions/upload-artifact@v7
         with:
-          name: guardrail-release-apk
+          name: ${{ env.EXPO_PUBLIC_DEMO_SETUP == '1' && 'guardrail-demo-setup-apk' || 'guardrail-release-apk' }}
           path: android/app/build/outputs/apk/release/*.apk
           if-no-files-found: error
           retention-days: 30

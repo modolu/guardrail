@@ -1,6 +1,6 @@
 /**
  * Hand-built byte layout of an SPL Token Account (165 bytes), independent of the decoder under test.
- * Used by scripts/verify-revoke.ts.
+ * Used by scripts/verify-revoke.ts and scripts/verify-demo-approve.ts.
  */
 import { getAddressDecoder, type Address } from '@solana/kit'
 
@@ -32,5 +32,19 @@ export function tokenAccountBytes(layout: TokenLayout = {}): Uint8Array {
   view.setUint32(109, 0, true) // is_native: None
   view.setBigUint64(121, layout.delegatedAmount ?? 250_500_000n, true)
   view.setUint32(129, 0, true) // close_authority: None
+  return data
+}
+
+// SPL Token Mint: mint_authority(COption<Pubkey>) supply(u64) decimals(u8) is_initialized(bool)
+// freeze_authority(COption<Pubkey>) = 82 bytes.
+export function mintAccountBytes(layout: { decimals?: number; isInitialized?: boolean } = {}): Uint8Array {
+  const data = new Uint8Array(82)
+  const view = new DataView(data.buffer)
+  view.setUint32(0, 1, true)
+  data.set(new Uint8Array(32).fill(6), 4)
+  view.setBigUint64(36, 1_000_000_000n, true)
+  data[44] = layout.decimals ?? 6
+  data[45] = layout.isInitialized === false ? 0 : 1
+  view.setUint32(46, 0, true) // freeze_authority: None
   return data
 }

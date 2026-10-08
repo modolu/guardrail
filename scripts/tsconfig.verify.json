@@ -14,7 +14,10 @@
     "verify-scanner.ts",
     "verify-revoke.ts",
     "verify-flow.ts",
+    "verify-demo-approve.ts",
     "create-demo-fixture.ts",
-    "verify-demo-fixture.ts"
+    "verify-demo-fixture.ts",
+    "create-wallet-fixture.ts",
+    "verify-wallet-fixture.ts"
   ]
 }
