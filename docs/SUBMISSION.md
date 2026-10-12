@@ -12,7 +12,7 @@ Submission date: **2026-10-08 (GMT+1)**. Items marked **TODO** are not done yet;
 - **GitHub:** <https://github.com/modolu/guardrail>
 - **APK:** **TODO** `<APK download URL>` (no release APK has been built: no JDK or Android SDK on the build machine; see
   [BUILD_ENVIRONMENT.md](BUILD_ENVIRONMENT.md#release-apk-not-built-yet))
-- **Demo video:** **TODO** `<demo video URL>` (not recorded; needs a device or emulator)
+- **Demo video:** <https://youtube.com/shorts/HW7uRBYIzh0>
 - **dApp Store:** **TODO** `<dApp Store listing URL>` (not submitted; see
   [DAPP_STORE_SUBMISSION.md](DAPP_STORE_SUBMISSION.md))
 - **Transaction proof:** **TODO** `<Devnet Explorer link to the revoke transaction signature>` (no revoke has been run
